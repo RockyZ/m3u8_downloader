@@ -20,6 +20,11 @@ if duration <= 0:
 	duration = 3600*72
 end_time = time.time() + duration
 
+packet_timings = []
+last_timing_time = time.time()
+last_timing_size = 0
+total_size = 0
+last_speed_timing_time = time.time()
 
 while time.time() < end_time and not Err_flag :
 
@@ -55,19 +60,54 @@ while time.time() < end_time and not Err_flag :
 	        		Err_flag = True
 				break	
 
-			doc = resp.read()
+			doc = resp.read(1408)
+			while doc:
+				total_size += len(doc)
+				cur = time.time()
+				# print cur
+				if cur - last_timing_time >= 1:
+					# print cur
+					# print packet_timings
+					last_timing_time = cur
+					packet_timings.append((last_timing_time, total_size))
+					last_timing_size = total_size
+					
+					delete_to_index = -1
+					for i, timing in enumerate(packet_timings):
+						timing_time = timing[0]
+						timing_size = timing[1]
+
+						if cur - timing_time < 11:
+							delete_to_index = i
+							break
+
+					if delete_to_index > 0:
+						# print delete_to_index, cur
+						del packet_timings[:delete_to_index]
+					
+					if len(packet_timings) >= 2:
+						first_timing = packet_timings[0]
+						last_timing = packet_timings[-1]
+						if cur - last_speed_timing_time > 11:
+							last_speed_timing_time = cur
+							print 'speed:', (last_timing[1] - first_timing[1]) / (last_timing[0] - first_timing[0]) / 1024, 'time span:', last_timing[0] - first_timing[0]
+							
+
+				doc = resp.read(1408)
+				pass
+			
 			resp.close()
 
 			end_ts  = time.time()
 			size = len(doc)
-                	dur = end_ts-start_ts
+			dur = end_ts-start_ts
 	
-			if dur > 8 :
-                        	print "Error TOO SLOW!!!!! " ,  dur, size , size*8/dur/1024,  " - ", segurl 
-                	else:
-                    		print dur, size , size*8/dur/1024,  " - ", segurl
+			# if dur > 8 :
+   #                      	print "Error TOO SLOW!!!!! " ,  dur, size , size*8/dur/1024,  " - ", segurl 
+   #              	else:
+   #                  		print dur, size , size*8/dur/1024,  " - ", segurl
 
-			ts_file.write(doc)     
+			# ts_file.write(doc)     
 		
 		seg_seq = seg_seq + 1
 		
