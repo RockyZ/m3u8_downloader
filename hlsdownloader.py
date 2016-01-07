@@ -5,19 +5,9 @@ from urllib import urlopen
 from sys import argv 
 import time
 
-
-if len(argv) <4 :
-	print "usage :%s <m3u8_url> <saved_tsfile> <duration>" , argv[0]
-	quit()
-
-ts_file =  open(argv[2], "wb")
-
 retrive_seq = -1 
 Err_flag = False
-
-duration = int(argv[3])
-if duration <= 0:
-	duration = 3600*72
+duration = 3600
 end_time = time.time() + duration
 
 packet_timings = []
@@ -116,6 +106,3 @@ while time.time() < end_time and not Err_flag :
 	elif not new_seg_flag :
 		time.sleep(5) 
 	 	print "sleep 5s..." 
-
-
-ts_file.close()
